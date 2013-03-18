@@ -52,6 +52,15 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
     };
   }
   
+  var MapDrawView = Backbone.View.exten({
+    map: null,
+
+    initialize: function(options) {
+
+    }
+
+  });
+
   var MapView = Backbone.View.extend({
 
     map: null,

@@ -25,6 +25,7 @@ function($, _, Backbone, settings, api) {
       "surveys/:slug/form/edit": "form_edit",
       "surveys/:slug/form": "form",
 
+      "surveys/:slug/settings/map": "settings_map",
       "surveys/:slug/settings": "settings",
 
       "*actions": "default_route"
@@ -65,6 +66,10 @@ function($, _, Backbone, settings, api) {
     settings: function(slug) {
       api.setSurveyIdFromSlug(slug, this.controller.goto_settings);
     },
+
+    settings_map: function(slug) {
+      api.setSurveyIdFromSlug(slug, this.controller.goto_settings_map);
+    }
 
     form: function(slug) {
       api.setSurveyIdFromSlug(slug, this.controller.goto_form);
