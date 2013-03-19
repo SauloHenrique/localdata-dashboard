@@ -22,6 +22,8 @@ define([
 function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
   'use strict';
 
+  var MapViews = {};
+
   function indexToColor(index) {
     if (index >= 0) {
       return settings.colorRange[index + 1];
@@ -51,17 +53,91 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       weight: 2
     };
   }
-  
-  var MapDrawView = Backbone.View.exten({
+
+
+  MapViews.MapDrawView = Backbone.View.extend({
     map: null,
+    el: "#map-draw-view-container",
+
+    events: {
+      'click .draw': 'drawZone',
+      'click .remove': 'removeZone',
+      'click .done': 'doneDrawingZone'
+    },
 
     initialize: function(options) {
+      _.bindAll(this, 'render', 'renderZones', 'drawZone', 'removeZone',
+        'doneDrawingZone', 'save');
 
+      this.survey = options.survey;
+      this.survey.on('change', this.render);
+    },
+
+    render: function() {
+      console.log("Rendering map draw view -------!", this.el);
+      this.$el.html(_.template($('#map-draw-view').html(), {
+        zones: this.survey.get('zones')
+      }));
+
+      // Center on the survey
+      // this.map.setView([42.374891,-83.069504], 17); // default center
+
+      if(this.survey.zones) {
+        this.renderZones();
+      }
+    },
+
+    /**
+     * Render surveyor zones on the map
+     */
+    renderZones: function() {
+      _.each(this.survey.zones, function(zone) {
+
+        // Add the zone to the map
+        new L.geoJson(zone, {
+          style: settings.circleMarker
+        });
+
+        // When it's clicked, make the zone editable
+        pointLayer.on('click', this.makeEditable);
+
+        // Add the layer to the layergroup and the hashmap
+        this.objectsOnTheMap.addLayer(pointLayer);
+
+        // Map.fitbounds
+      });
+    },
+
+    /**
+     * Get the user started drawing a shape on the map 
+     */
+    drawZone: function(event) {
+      // Show the drawing tools
+
+      // Show the save button
+    },
+
+    /**
+     * Save the shape that's just been drawn on the map
+     */
+    doneDrawingZone: function(event) {
+      // Save the zone to the survey
+    },
+
+    /**
+     * Remove a zone from the survey
+     */
+    deleteZone: function(event) {
+      // Delete it from the survey
+      
+      // Delete it from the map
+      
+      // Save the survey
     }
 
   });
 
-  var MapView = Backbone.View.extend({
+  MapViews.MapView = Backbone.View.extend({
 
     map: null,
     responses: null,
@@ -515,5 +591,5 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
 
   });
 
-  return MapView;
+  return MapViews;
 });

@@ -26,8 +26,9 @@ function($, _, Backbone, settings, api) {
         this.makeNavItem('nav-responses', 'surveys/' + this.slug, 'Results', 'icon-home'),
         this.makeNavItem('nav-export', 'surveys/' + this.slug + '/export', 'Export', 'icon-download'),
         this.makeNavItem('nav-form', 'surveys/' + this.slug + '/form', 'Survey Questions', 'icon-cog'),
+        this.makeNavItem('nav-map', 'surveys/' + this.slug + '/settings/map', 'Draw map', 'icon-cog'),
 
-        // this.makeNavItem('nav-form', 'surveys/' + this.slug + '/settings', 'Settings', 'icon-cog tab-settings')
+        this.makeNavItem('nav-settings', 'surveys/' + this.slug + '/settings', 'Settings', 'icon-cog tab-settings')
       ];
       this.current = this.items[0];
     },

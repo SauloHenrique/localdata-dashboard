@@ -69,7 +69,7 @@ function($, _, Backbone, settings, api) {
 
     settings_map: function(slug) {
       api.setSurveyIdFromSlug(slug, this.controller.goto_settings_map);
-    }
+    },
 
     form: function(slug) {
       api.setSurveyIdFromSlug(slug, this.controller.goto_form);

@@ -61,8 +61,7 @@ function($, _, Backbone, settings, api) {
     },
 
     render: function() {
-
-      console.log(this.survey);
+      console.log("RENDERING SETTINGS VIEW");
 
       var context = {
         survey: this.survey.toJSON(),

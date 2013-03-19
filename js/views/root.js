@@ -126,7 +126,9 @@ function($, _, Backbone, _kmq, settings, IndexRouter, HomeView, DashboardView, U
         case "settings":
           this.currentContentView.showSettings();
           break;
-          
+        case "map":
+          this.currentContentView.showMapSettings();
+          break;
       }
     },
 
@@ -141,6 +143,12 @@ function($, _, Backbone, _kmq, settings, IndexRouter, HomeView, DashboardView, U
       this.goto_survey("settings");
     },
     
+    goto_settings_map: function() {
+      _kmq.push(['record', "MapView"]);
+      this._router.navigate("surveys/" + settings.slug + "/settings/map");
+      this.goto_survey("map");
+    },
+
     goto_form: function() {
       this._router.navigate("surveys/" + settings.slug + "/form");
       this.goto_survey("form");

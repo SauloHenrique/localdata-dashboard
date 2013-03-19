@@ -447,19 +447,19 @@ header a {
   margin-bottom:20px;
 }
 
-#map-controls {
+.map-controls {
   display:none;
   padding:10px;
   background:#3f5b88;
 }
 
-  #map-controls a {
+  .map-controls a {
     color:#fefefe;
     border-radius:8px;
     padding:0px 5px;
   }
 
-  #map-controls #address-search {
+  .map-controls .address-search {
     background:transparent;
     color:#fefefe;
     border:0;
@@ -468,7 +468,7 @@ header a {
     max-width:400px;
   }
 
-  #map-controls .icon-search:before {
+  .map-controls .icon-search:before {
     padding-right:5px; 
   }
 

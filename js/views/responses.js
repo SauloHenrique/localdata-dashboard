@@ -20,7 +20,7 @@ define([
   'views/map'
 ],
 
-function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView) {
+function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapViews) {
   'use strict';
 
   var ResponseViews = {};
@@ -85,7 +85,7 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
       // TODO: This should be done in a view.
       // Set up the map view, now that the root exists.
       if (this.mapView === null) {
-        this.mapView = new MapView({
+        this.mapView = new MapViews.MapView({
           el: $('#map-view-container'),
           responses: this.responses,
           survey: this.survey

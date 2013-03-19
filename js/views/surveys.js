@@ -22,6 +22,7 @@ define([
   'views/settings',
   'views/responses',
   'views/forms',
+  'views/map',
 
   // Misc
   'misc/exampleform'
@@ -49,6 +50,7 @@ function(
   SettingsView,
   ResponseViews,
   FormViews,
+  MapViews,
 
   // Misc
   exampleForm
@@ -155,7 +157,7 @@ function(
     bodyView: null,
     
     initialize: function(options) {
-      _.bindAll(this, 'update', 'render', 'show', 'showResponses', 'showUpload', 'showForm', 'showSettings');
+      _.bindAll(this, 'update', 'render', 'show', 'showResponses', 'showUpload', 'showForm', 'showSettings', 'showMapSettings');
 
       // Set up the page and show the given survey
       this.surveyId = options.id;
@@ -222,12 +224,16 @@ function(
         survey: this.survey,
         forms: this.forms
       });
+      this.settingsMapView = new MapViews.MapDrawView({
+        survey: this.survey
+      });
 
       // Render navigation, export, and settings views
       this.navView.render();
       this.exportView.render();
       this.formView.render();
       this.settingsView.render();
+      this.settingsMapView.render();
 
       // By default, we show the first tab
       this.show(this.toshow[0], this.toshow[1]);
@@ -256,7 +262,12 @@ function(
     },
 
     showSettings: function() {
-      this.show('#settings-view-container', 3);
+      this.show('#settings-view-container', 4);
+    },
+
+    showMapSettings: function() {
+      console.log("SHOW MAP SETTINGS");
+      this.show('#map-draw-view-container', 3);
     },
 
     // Not yet implemented

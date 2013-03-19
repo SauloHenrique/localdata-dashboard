@@ -261,6 +261,7 @@
           <div id="form-view-container"></div>
           <div id="export-view-container"></div>
           <div id="settings-view-container"></div>
+          <div id="map-draw-view-container"></div>
         </div>
       </div>   
     </script>
@@ -512,14 +513,22 @@
     
     <!-- Map ..............................................................-->
     <script type="text/template" id="map-view">
-      <div id="map-controls">
-        <input type="text" id="address-search" placeholder="address">
+      <div class="map-controls">
+        <input type="text" class="address-search" placeholder="address">
         <a href="" class="button icon-search">Jump to address</a>
       </div>
       <div id="map">Map here</div>
       <div id="parceldeets"></div>
     </script>
     
+    <script type="text/template" id="map-draw-view">
+      <h3>Draw your survey area</h3>
+      <div class="map-controls">
+        <a href="" class="button icon-search">Draw</a>
+      </div>
+      <div class="map-draw">Map here</div>
+    </script>
+
     <!-- Export ...........................................................-->
     <script type="text/template" id="export-view">
       <h3>Export your data</h3>
@@ -567,20 +576,6 @@
       <li class="<%= item.active %>"><a href="#<%= item.fragment %>"><span class="<%= item.icon %>"></span><%= item.title %></a></li>
     <% }); %>
     </script>
-    
-
-    <!-- Pagination .......................................................-->
-    <script type="text/template" id="pagination-view">
-      <!--<div class="pagination">
-        <ul>
-          <li><a href="#">Prev</a></li>          
-          <% _.each(_.range(1, pageCount + 1), function(page) { %>
-            <li class="pagination-item"><a href=""><%= page %></a></li>
-          <% }); %>
-          <li><a href="#">Next</a></li>
-        </ul>
-      </div>-->
-    </script>
 
 
     <!-- Editor  ...........................................................-->
@@ -600,7 +595,7 @@
           <div>
           </div>
         </form>
-      </body>
+      </div>
     </script>
 
     <!-- Editor: Form templates ........................................... -->
