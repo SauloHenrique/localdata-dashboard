@@ -1,4 +1,4 @@
-/* LocalData Styles .........................................................*/
+map-controls/* LocalData Styles .........................................................*/
 /* 
   Colors
   Link: #00949b
@@ -442,16 +442,23 @@ header a {
 
 /* Map .....................................................................*/
 
-#map {
+#map,
+#map-draw {
   height:300px;
   margin-bottom:20px;
 }
 
 .map-controls {
   display:none;
-  padding:10px;
+  padding:5px;
   background:#3f5b88;
+  background:#ddd;
+  border-radius:10px 10px 0 0;
 }
+
+  #map-draw-view-container .map-controls {
+    display:block;
+  }
 
   .map-controls a {
     color:#fefefe;

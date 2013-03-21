@@ -6,7 +6,7 @@ define([
   'jquery',
   'lib/lodash',
   'backbone',
-  'lib/leaflet/leaflet.google',
+  'lib/leaflet.draw/leaflet.draw-src',
   'moment',
   'lib/tinypubsub',
   'lib/kissmetrics',
@@ -79,8 +79,28 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
         zones: this.survey.get('zones')
       }));
 
+      // Initialize the map
+      this.map = new L.map('map-draw');
+
+      // Set up the base map; add the parcels and done markers
+      this.googleLayer = new L.Google("TERRAIN");
+      this.map.addLayer(this.googleLayer);
+
+
+      // Initialize the FeatureGroup to store editable layers
+      var drawnItems = new L.FeatureGroup();
+      this.map.addLayer(drawnItems);
+
+      // Initialize the draw control and pass it the FeatureGroup of editable layers
+      var drawControl = new L.Control.Draw({
+          edit: {
+              featureGroup: drawnItems
+          }
+      });
+      this.map.addControl(drawControl);
+
       // Center on the survey
-      // this.map.setView([42.374891,-83.069504], 17); // default center
+      this.map.setView([42.374891,-83.069504], 17); // default center
 
       if(this.survey.zones) {
         this.renderZones();
