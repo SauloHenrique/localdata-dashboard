@@ -74,13 +74,13 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
     },
 
     render: function() {
-      console.log("Rendering map draw view -------!", this.el);
+      console.log("Rendering map draw view");
       this.$el.html(_.template($('#map-draw-view').html(), {
         zones: this.survey.get('zones')
       }));
 
       // Initialize the map
-      this.map = new L.map('map-draw');
+      this.map = new L.map('map-draw', {drawControl: true});
 
       // Set up the base map; add the parcels and done markers
       this.googleLayer = new L.Google("TERRAIN");

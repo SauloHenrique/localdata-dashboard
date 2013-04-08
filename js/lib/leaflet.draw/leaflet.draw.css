@@ -89,7 +89,8 @@
 	background-color: #A0A098;
 }
 
-.leaflet-draw-actions-top.leaflet-draw-actions-bottom a {
+.leaflet-draw-actions-top a,
+.leaflet-draw-actions-bottom a {
 	height: 26px;
 	line-height: 26px;
 }

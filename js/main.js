@@ -31,7 +31,7 @@ require.config({
       exports: 'L'
     },
 
-    'lib/leaflet.draw/leaflet.draw-src': {
+    'lib/leaflet.draw/leaflet.draw': {
       deps: ['lib/leaflet/leaflet'],
       exports: 'L'
     },
