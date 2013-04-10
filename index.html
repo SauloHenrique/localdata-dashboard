@@ -16,8 +16,11 @@
       @import url("css/app.css");
       @import url("js/lib/leaflet/leaflet.css");
       @import url("js/lib/leaflet.draw/leaflet.draw.css");
-      @import url("js/lib/leaflet.draw/leaflet.draw.ie.css");
     </style>
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="js/lib/leaflet/leaflet.ie.css" />
+      <link rel="stylesheet" href="js/lib/leaflet.draw/leaflet.draw.ie.css" />
+    <![endif]-->
 </head>
 
 <body>

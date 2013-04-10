@@ -6,7 +6,7 @@ define([
   'jquery',
   'lib/lodash',
   'backbone',
-  'lib/leaflet.draw/leaflet.draw-src',
+  'lib/leaflet.draw/leaflet.draw',
   'moment',
   'lib/tinypubsub',
   'lib/kissmetrics',
@@ -69,38 +69,57 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       _.bindAll(this, 'render', 'renderZones', 'drawZone', 'removeZone',
         'doneDrawingZone', 'save');
 
+
       this.survey = options.survey;
       this.survey.on('change', this.render);
     },
 
     render: function() {
+      if (this.exists) {
+        return;
+      }
+      this.exists = true;
+
       console.log("Rendering map draw view");
       this.$el.html(_.template($('#map-draw-view').html(), {
         zones: this.survey.get('zones')
       }));
 
       // Initialize the map
-      this.map = new L.map('map-draw', {drawControl: true});
+      this.map = new L.map('map-draw', {
+        maxZoom: 19
+      });
+
+      // Center on the survey
+      this.map.setView([42.374891,-83.069504], 17); // default center
 
       // Set up the base map; add the parcels and done markers
       this.googleLayer = new L.Google("TERRAIN");
       this.map.addLayer(this.googleLayer);
 
-
       // Initialize the FeatureGroup to store editable layers
-      var drawnItems = new L.FeatureGroup();
-      this.map.addLayer(drawnItems);
+      this.drawnItems = new L.FeatureGroup();
+      this.map.addLayer(this.drawnItems);
 
       // Initialize the draw control and pass it the FeatureGroup of editable layers
       var drawControl = new L.Control.Draw({
           edit: {
-              featureGroup: drawnItems
+              featureGroup: this.drawnItems
           }
       });
       this.map.addControl(drawControl);
 
-      // Center on the survey
-      this.map.setView([42.374891,-83.069504], 17); // default center
+      this.map.on('draw:created', function (e) {
+        var type = e.layerType,
+          layer = e.layer;
+
+        if (type === 'marker') {
+          layer.bindPopup('A popup!');
+        }
+
+        this.drawnItems.addLayer(layer);
+      }.bind(this));
+
 
       if(this.survey.zones) {
         this.renderZones();
@@ -147,12 +166,16 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
     /**
      * Remove a zone from the survey
      */
-    deleteZone: function(event) {
+    removeZone: function(event) {
       // Delete it from the survey
       
       // Delete it from the map
       
       // Save the survey
+    },
+
+    save: function() {
+      console.log("NOOP");
     }
 
   });
