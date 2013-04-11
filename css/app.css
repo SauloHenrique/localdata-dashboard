@@ -1,5 +1,5 @@
-map-controls/* LocalData Styles .........................................................*/
-/* 
+/* LocalData Styles .........................................................*/
+/*
   Colors
   Link: #00949b
   Link hover: #138288
@@ -42,7 +42,7 @@ form input, form label {
 
 form input[type='radio'],
 form input[type='checkbox'] {
-  display:inline-block; 
+  display:inline-block;
   margin-right:10px;
 }
 
@@ -51,23 +51,23 @@ form textarea {
   font-family:"Open Sans", "Source Sans Pro", Helvetica, sans-serif;
   font-size:24px;
   text-indent:5px;
-  
+
   margin:5px 0px 8px;
   border:1px solid #ddd;
 
-  -webkit-box-shadow: 
-    inset 0 0 8px  rgba(0,0,0,0.1); 
-  -moz-box-shadow: 
-    inset 0 0 8px  rgba(0,0,0,0.1); 
-  box-shadow: 
-    inset 0 0 8px  rgba(0,0,0,0.1); 
+  -webkit-box-shadow:
+    inset 0 0 8px  rgba(0,0,0,0.1);
+  -moz-box-shadow:
+    inset 0 0 8px  rgba(0,0,0,0.1);
+  box-shadow:
+    inset 0 0 8px  rgba(0,0,0,0.1);
 }
 
 form label {
-  font-weight:600; 
+  font-weight:600;
   margin-top:1em;
-  cursor:pointer; 
-  line-height:1.7;  
+  cursor:pointer;
+  line-height:1.7;
 }
 
 form .error {
@@ -130,7 +130,7 @@ form .error {
 /* Structure ...............................................................*/
 
 .container {
-  padding:20px 30px 20px 30px; 
+  padding:20px 30px 20px 30px;
 }
 
 .floatcontainer {
@@ -291,14 +291,14 @@ header a {
 
 
 /* Login ................................................................... */
-#login h2, 
+#login h2,
 #create-account h2 {
   font-size:24px;
   margin-bottom:12px;
 }
 
 #login,
-#create-account { 
+#create-account {
   width:45%;
   float:left;
 }
@@ -324,7 +324,7 @@ header a {
 }
 
 .survey-list h2 a {
-  border:0; 
+  border:0;
   display:block;
 }
 
@@ -357,7 +357,7 @@ header a {
 
   #subfilter li a {
     text-decoration:none;
-    color:#fff; 
+    color:#fff;
     background:#3f5b88;
     border-radius:10px;
     font-size:.9em;
@@ -476,14 +476,21 @@ header a {
   }
 
   .map-controls .icon-search:before {
-    padding-right:5px; 
+    padding-right:5px;
   }
 
 .leaflet-control-attribution {
-  display:none;
+  ddisplay:none;
 }
 
-/*  Note that we can't combine these two rules because they're 
+.zone-color {
+  display:inline-block;
+  border-radius:10px;
+  border:10px solid red;
+  opacity: 0.5;
+}
+
+/*  Note that we can't combine these two rules because they're
     browser-specific */
 #address-search::-webkit-input-placeholder {
     color: #93a9cd;
@@ -568,7 +575,7 @@ header a {
     background:#fff;
 }
 
-  #new-survey-form input[type='text'] { 
+  #new-survey-form input[type='text'] {
     margin-bottom:10px;
     width:350px;
   }
@@ -609,7 +616,7 @@ header a {
 }
 
   .choice-box {
-    display: inline-block; 
+    display: inline-block;
 
     width:250px;
     border: 1px solid #faf6ad;
@@ -624,7 +631,7 @@ header a {
     text-align:center;
 
   }
-    .choice-box h3 { 
+    .choice-box h3 {
       padding-top:10px;
       font-weight:bold;
       font-size:24px;
@@ -656,7 +663,7 @@ header a {
   margin-right:5%;
   float:left;
 }
-  
+
   #builder-view-container .done {
     float:right;
   }
@@ -691,7 +698,7 @@ header a {
       }
 
     .question .question {
-      margin-left:20px; 
+      margin-left:20px;
     }
 
   .editor .answers {
@@ -778,7 +785,7 @@ header a {
 }
 
 .actionbar {
-  
+
 }
   .actionbar div {
     display: inline-block;
@@ -813,7 +820,7 @@ header a {
   width:44%;
   float:left;
 }
-  
+
   #preview.popup {
     flot:none;
     background:#fff;
@@ -843,7 +850,7 @@ header a {
   }
 
   #preview.popup #preview-close {
-    display:inline; 
+    display:inline;
   }
 
   #preview-survey-title {

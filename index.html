@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>LocalData</title>
-    
+
     <!-- Scripts I couldn't fit into Require yet -->
     <script type="text/javascript" src="//maps.google.com/maps/api/js?v=3.2&sensor=false"></script>
 
     <!-- Styles -->
     <link href='//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800,300|Pacifico' rel='stylesheet' type='text/css'>
-    
+
     <style type="text/css" media="screen">
       @import url("css/lib/reset.css");
       @import url("css/buttons.css");
@@ -38,7 +38,7 @@
 
     <div id="container">
     </div>
-    
+
     <!-- Templates ========================================================-->
 
     <script type="text/template" id="userbar-view">
@@ -51,37 +51,37 @@
 
     <!-- Home .............................................................-->
     <script type="text/template" id="home">
-    
+
       <div class="container">
         <header id="survey-header">
             <h2>Welcome to LocalData!</h2>
         </header>
       </div>
-    
+
       <div class="container">
       <div id="content">
         <div id="body">
-        </div>   
+        </div>
       </div>
       </div>
     </script>
-    
+
 
     <!-- Dashboard ..........................................................-->
     <script type="text/template" id="dashboard">
       <div class="container">
         <header id="survey-header">
             <h2>My Surveys <a href="#/surveys/new" class="button flat" id="newsurvey">Create a new survey</a></h2>
-            
+
         </header>
       </div>
-    
+
       <div class="container">
       <div id="content">
         <div id="body">
           <div class="survey-list floatcontainer">
           </div>
-        </div>   
+        </div>
       </div>
       </div>
     </script>
@@ -93,7 +93,7 @@
             <h2>Create a new survey</h2>
         </header>
       </div>
-    
+
       <div class="container">
         <!--<div id="content">
           <div id="body">-->
@@ -112,7 +112,7 @@
               <label><input type="radio" value="pointandparcel" name="type">We need to collect information about points and parcels (experimental)
               </label>
 
-              <!-- 
+              <!--
               <a class="action show-advanced">Advanced options</a>
               <div class="advanced">
                 <input type="text" placeholder="Survey type" class="survey-type">
@@ -121,7 +121,7 @@
               -->
               <a class="button submit">Create new survey</a>
             </form>
-        <!--  </div>   
+        <!--  </div>
         </div>-->
       </div>
     </script>
@@ -182,13 +182,13 @@
             <h2>Welcome to LocalData</h2>
         </header>
       </div>
-    
+
       <div class="container">
         <div id="content">
           <div id="body" class="floatcontainer">
             <form id="login">
               <h2>Please Log In</h2>
-              
+
               <input type="text" name="email" placeholder="Your email">
               <input type="password" name="password" placeholder="Password">
               <a class="button">Log in</a><span class="error"></span>
@@ -202,7 +202,7 @@
               <input type="password" name="password" placeholder="Password">
               <a class="button">Sign up</a><span class="error"></span>
             </form>
-          </div>   
+          </div>
         </div>
       </div>
 
@@ -218,7 +218,7 @@
     <!-- Previews .........................................................-->
     <script type="text/template" id="preview-view">
       <div id="preview-dimmer"></div>
-      <div id="preview"</div>
+      <div id="preview"</div
     </script>
 
     <script type="text/template" id="t-preview-title">
@@ -248,27 +248,27 @@
       </div>
     </script>
 
-    <!-- Survey ...........................................................-->    
+    <!-- Survey ...........................................................-->
     <script type="text/template" id="survey-view">
       <header id="survey-header">
         <div class="container">
           <h2 id="survey-name"><%= survey.name %> </h2>
         </div>
       </header>
-      
+
 
       <div id="body" class="container">
         <div id="nav" class="nav nav-tabs"></div>
 
         <div id="content" class="floatcontainer">
           <div id="loading-view-container"></div>
-          <div id="response-view-container"></div>   
+          <div id="response-view-container"></div>
           <div id="form-view-container"></div>
           <div id="export-view-container"></div>
           <div id="settings-view-container"></div>
           <div id="map-draw-view-container"></div>
         </div>
-      </div>   
+      </div>
     </script>
 
     <script type="text/template" id="survey-list-item-view">
@@ -295,10 +295,10 @@
         <label><input type="radio" value="parcel" name="type" <% if(survey.type !== 'point' && survey.type !== 'pointandparcel') { %>checked <% } %>>We&apos;re collecting data using a parcel map (for example, property, homes, businesses with an address)
         </label>
 
-        <label><input type="radio" value="pointandparcel" name="type" <% if(survey.type !== 'pointandparcel') { %>checked <% } %>>We need to collect information about points and parcels. 
+        <label><input type="radio" value="pointandparcel" name="type" <% if(survey.type !== 'pointandparcel') { %>checked <% } %>>We need to collect information about points and parcels.
         </label>
 
-        <a class="button save">Save</a> 
+        <a class="button save">Save</a>
         <div class="saved">Form saved</div>
         <div class="error">Error saving the form &mdash; did you complete all fields?</div>
       </form>
@@ -311,7 +311,7 @@
         <a class="button edit-form-button">Edit form</a>
         <a href="<%= mobile %>">Go to the mobile app</a>
         <label>
-          Copy link to app 
+          Copy link to app
           <input type="text" value="<%= mobile %>">
         </label>
 
@@ -325,7 +325,7 @@
       <div id="editor-view-container"></div>
       <div id="survey-design-container"></div>
     </script>
-    
+
 
     <!-- Responses & Filtering ..............................................-->
     <script type="text/template" id="filter-results">
@@ -347,7 +347,7 @@
         <% }); %>
       </ul>
     </script>
-    
+
     <script type="text/template" id="responses-table">
       <table>
         <thead>
@@ -359,7 +359,7 @@
             <th>Data</th>
           </tr>
         </thead>
-            
+
         <tbody>
         <% _.each(responses, function(r, i) { %>
           <tr class="response">
@@ -379,17 +379,17 @@
                 <%- r.responses.collector %>
               <% } %>
             </td>
-          
+
             <td class="answers">
             <% _.each(r.responses, function(resp, key) { %>
               <div class="answer">
-                <span class="key"><%- key %>:</span> 
+                <span class="key"><%- key %>:</span>
                 <span class="value"><%- resp %>&nbsp;</span>
               </div>
             <% }); %>
             </td>
           </tr>
-        
+
         <% }); %>
         </tbody>
       </table>
@@ -448,24 +448,24 @@
         <div id="subfilter">
         </div>
       </div>
-      
-      <div class="response-list">  
+
+      <div class="response-list">
 
         <div id="filter-view-container"></div>
 
         <h2 id="count">
-          <%= _.size(responses) %> 
+          <%= _.size(responses) %>
           Response<% if(_.size(responses) != 1) { %>s<% } %>
         </h2>
 
-        <div id="map-view-container"></div> 
+        <div id="map-view-container"></div>
 
-        <div id="individual-result-container"></div>  
+        <div id="individual-result-container"></div>
 
         <div id="responses-list"></div>
-      
+
       </div>
-      
+
       <div id="result-pagination"></div>
     </script>
 
@@ -480,7 +480,7 @@
             <th>Data</th>
           </tr>
         </thead>
-            
+
         <tbody>
           <tr class="response">
             <td class="created"><%- r.createdHumanized %></td>
@@ -498,11 +498,11 @@
                 <%- r.responses.collector %>
               <% } %>
             </td>
-          
+
             <td class="answers">
             <% _.each(r.responses, function(resp, key) { %>
               <div class="answer">
-                <span class="key"><%- key %>:</span> 
+                <span class="key"><%- key %>:</span>
                 <span class="value"><%- resp %>&nbsp;</span>
               </div>
             <% }); %>
@@ -514,8 +514,8 @@
       <a href="" class="close button">Close</a>
     </div>
     </script>
-    
-    
+
+
     <!-- Map ..............................................................-->
     <script type="text/template" id="map-view">
       <div class="map-controls">
@@ -525,13 +525,22 @@
       <div id="map">Map here</div>
       <div id="parceldeets"></div>
     </script>
-    
+
     <script type="text/template" id="map-draw-view">
       <h3>Draw your survey area</h3>
-      <div class="map-controls">
-        <!--<a href="" class="button icon-search">Draw</a>-->
-      </div>
       <div id="map-draw">Map here</div>
+      <div id="map-zones">ZONES HERE</div>
+    </script>
+
+    <script type="text/template" id="map-zones-view">
+      <h2>Survey Zones</h2>
+
+      <% _.each(zones, function(zone) {  %>
+        <div classs="survey-zone-form">
+          <input type="text" value="<%= zone.name %>" />
+          <div class="zone-color" style="background-color:<%= zone.color %>; border-color:<%= zone.color %>;"></div>
+        </div>
+      <% }); %>
     </script>
 
     <!-- Export ...........................................................-->
@@ -539,27 +548,27 @@
       <h3>Export your data</h3>
       <div class="button-container">
         <a href="<%= baseurl %>/surveys/<%= surveyId %>/csv" class="button"><span class="icon-table"></span> Download CSV</a>
-        
+
         <a href="<%= baseurl %>/surveys/<%= surveyId %>/kml" class="button"><span class="button-in"><span class="icon-globe"></span> Download KML (points) </span></a>
-        
+
         <!--
         <a href="<%= baseurl %>/surveys/<%= surveyId %>/kml" class="button"><span class="button-in"><span class="icon-globe"></span> Download KML (parcels)</span></a>
         -->
       </div>
     </script>
-    
-    
+
+
     <!-- Upload ...........................................................-->
     <script type="text/template" id="upload-view">
       <h3>Upload scanned paper forms</h3>
-      
+
       <p>When you&apos;ve scanned in the paper forms, you can upload them here.</p>
       <p>Either click the button and select the files, or drag and drop them right onto the page!</p>
       <div id="file-uploader"></div>
       <div class="drop-area"></div>
     </script>
 
-    
+
     <!-- Scan .............................................................-->
     <script type="text/template" id="scan-view">
       <h3>Scanned forms</h3>
@@ -573,8 +582,8 @@
         <% }); %>
       </ul>
     </script>
-    
-    
+
+
     <!-- Navigation ........................................................-->
     <script type="text/template" id="nav-view">
     <% _.each(items, function(item) {  %>
@@ -631,7 +640,7 @@
             <a class="action add-sub-question"><i class="icon-share-alt "></i> Add sub-question</a>
         </div>
     </script>
-             
+
     <script data-main="js/main" src="js/require.js"></script>
 
 </body>

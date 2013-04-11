@@ -7,7 +7,7 @@ define([
 ],
 
 function(L) {
-  'use strict'; 
+  'use strict';
 
   /*
    * Google layer using Google Maps API

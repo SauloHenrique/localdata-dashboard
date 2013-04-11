@@ -16,10 +16,11 @@ define([
   'api',
 
   // Models
-  'models/responses'
+  'models/responses',
+  'models/zones'
 ],
 
-function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
+function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zones) {
   'use strict';
 
   var MapViews = {};
@@ -72,14 +73,19 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
 
       this.survey = options.survey;
       this.survey.on('change', this.render);
+      this.survey.on('change', this.updateZones);
+
+      this.zones = new Zones.Collection();
+      this.zones.on('add', this.renderZones);
+    },
+
+    updateZones: function() {
+      if(_.has(this.survey, 'zones')) {
+        this.zones.reset(this.survey.zones);
+      }
     },
 
     render: function() {
-      if (this.exists) {
-        return;
-      }
-      this.exists = true;
-
       console.log("Rendering map draw view");
       this.$el.html(_.template($('#map-draw-view').html(), {
         zones: this.survey.get('zones')
@@ -94,8 +100,12 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       this.map.setView([42.374891,-83.069504], 17); // default center
 
       // Set up the base map; add the parcels and done markers
-      this.googleLayer = new L.Google("TERRAIN");
-      this.map.addLayer(this.googleLayer);
+      // this.googleLayer = new L.Google("TERRAIN");
+      // this.map.addLayer(this.googleLayer);
+      //
+      this.baseLayer = new L.tileLayer('http://a.tiles.mapbox.com/v3/matth.map-zmpggdzn/{z}/{x}/{y}.png');
+      this.map.addLayer(this.baseLayer);
+
 
       // Initialize the FeatureGroup to store editable layers
       this.drawnItems = new L.FeatureGroup();
@@ -103,6 +113,18 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
 
       // Initialize the draw control and pass it the FeatureGroup of editable layers
       var drawControl = new L.Control.Draw({
+          draw: {
+            polyline: false,
+            rectangle: false,
+            circle: false,
+            marker:false,
+            polygon: {
+              shapeOptions: {
+                  color: '#ef6d4a',
+                  fillColor: '#ef6d4a'
+              }
+            }
+          },
           edit: {
               featureGroup: this.drawnItems
           }
@@ -110,16 +132,29 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       this.map.addControl(drawControl);
 
       this.map.on('draw:created', function (e) {
-        var type = e.layerType,
-          layer = e.layer;
+        var type  = e.layerType,
+            layer = e.layer;
 
-        if (type === 'marker') {
-          layer.bindPopup('A popup!');
-        }
+        console.log(e.layer);
 
+        var zoneNumber = this.zones.length;
+        var color = settings.colorRange[zoneNumber];
+        layer.setStyle({
+          color: color,
+          fillColor: color
+        });
+
+        // Create a new zone model
+        var zone = new Zones.Model({
+          layer: layer,
+          name: 'Zone ' + (this.zones.length + 1),
+          color: color
+        });
+        this.zones.push(zone);
+
+        // Add the zone layer to the layerGroup
         this.drawnItems.addLayer(layer);
       }.bind(this));
-
 
       if(this.survey.zones) {
         this.renderZones();
@@ -130,25 +165,18 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
      * Render surveyor zones on the map
      */
     renderZones: function() {
-      _.each(this.survey.zones, function(zone) {
+      console.log("ZONE ADDED!");
 
-        // Add the zone to the map
-        new L.geoJson(zone, {
-          style: settings.circleMarker
-        });
+      // Add the zones to the map
+      $('#map-zones').html(_.template($('#map-zones-view').html(), {
+        zones: this.zones.toJSON()
+      }));
 
-        // When it's clicked, make the zone editable
-        pointLayer.on('click', this.makeEditable);
 
-        // Add the layer to the layergroup and the hashmap
-        this.objectsOnTheMap.addLayer(pointLayer);
-
-        // Map.fitbounds
-      });
     },
 
     /**
-     * Get the user started drawing a shape on the map 
+     * Get the user started drawing a shape on the map
      */
     drawZone: function(event) {
       // Show the drawing tools
@@ -168,9 +196,9 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
      */
     removeZone: function(event) {
       // Delete it from the survey
-      
+
       // Delete it from the map
-      
+
       // Save the survey
     },
 
@@ -191,11 +219,11 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
     selectedObject: {},
     markers: {},
     filter: null,
-    
+
     initialize: function(options) {
       console.log("Init map view");
       _.bindAll(this, 'render', 'selectObject', 'renderObject', 'renderObjects', 'getResponsesInBounds', 'updateMapStyleBasedOnZoom', 'updateObjectStyles');
-      
+
       this.responses = options.responses;
       // TODO: if we add the filter logic to the responses collection, we can
       // more cleanly trigger off its events.
@@ -235,7 +263,7 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
 
     // Debounced version of fitBounds. Created in the initialize method.
     delayFitBounds: null,
-    
+
     render: function (arg) {
       var hasResponses = this.responses !== null && this.responses.length > 0;
       var hasZones = this.survey.has('zones');
@@ -252,7 +280,7 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
 
         // Initialize the map
         this.map = new L.map('map');
-        
+
         // Set up the base map; add the parcels and done markers
         this.googleLayer = new L.Google("TERRAIN");
         this.map.addLayer(this.googleLayer);
@@ -445,7 +473,7 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       console.log("Changing style");
       this.objectsOnTheMap.setStyle(style);
     },
-    
+
     // Expects an object with properties
     // obj.parcelId: ID of the given object
     // obj.geometry: GeoJSON geometry object
@@ -547,29 +575,29 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
         this.selectedLayer.setStyle(settings.selectedStyle);
       }
     },
-    
+
     getParcelsInBounds: function() {
       // Don't add any parcels if the zoom is really far out.
       var zoom = this.map.getZoom();
       if(zoom < 16) {
         return;
       }
-      
+
       // If there are a lot of objects, let's clear them out
       // to improve performance
       if( _.size(this.parcelIdsOnTheMap) > 1250 ) {
         this.objectsOnTheMap.clearLayers();
         this.parcelIdsOnTheMap = {};
       }
-      
+
       // Get parcel data in the bounds
       api.getObjectsInBounds(this.map.getBounds(), this.renderObjects);
     },
-          
+
     // Get all the responses in the current viewport
     getResponsesInBounds: function(){
       console.log("Getting responses in the map");
-      
+
       // Don't add any markers if the zoom is really far out.
       var zoom = this.map.getZoom();
       if(zoom < 17) {
@@ -580,21 +608,21 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses) {
       // And add them to the map
       api.getResponsesInBounds(this.map.getBounds(), this.addResultsToMap);
     },
-    
+
     selectObject: function(event) {
       _kmq.push(['record', "Map object selected"]);
-      
+
       if (this.selectedLayer !== null) {
         this.selectedLayer.setStyle(this.defaultStyle);
       }
-      
+
       // Select the current layer
       this.selectedLayer = event.layer;
       this.selectedLayer.setStyle(settings.selectedStyle);
-      
+
       // Let's show some info about this object.
       this.details(this.selectedLayer.feature);
-        
+
     },
 
     /**
