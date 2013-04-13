@@ -73,19 +73,19 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
       this.survey = options.survey;
       this.survey.on('change', this.render);
-      this.survey.on('change', this.updateZones);
 
       this.zones = new Zones.Collection();
       this.zones.on('add', this.renderZones);
+      this.zones.on('reset', this.renderZones);
     },
 
-    updateZones: function() {
-      if(_.has(this.survey, 'zones')) {
-        this.zones.reset(this.survey.zones);
-      }
-    },
 
     render: function() {
+      // Don't re-render
+      if(this.map) {
+        return;
+      }
+
       console.log("Rendering map draw view");
       this.$el.html(_.template($('#map-draw-view').html(), {
         zones: this.survey.get('zones')
@@ -137,6 +137,8 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
         console.log(e.layer);
 
+        // Style zones with a unique color
+        // TODO: we only have 6 colors right now.
         var zoneNumber = this.zones.length;
         var color = settings.colorRange[zoneNumber];
         layer.setStyle({
@@ -166,14 +168,21 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
      */
     renderZones: function() {
       console.log("ZONE ADDED!");
-
       // Add the zones to the map
+      this.zones.each(function(zone) {
+        this.map.addLayer(zone);
+      });
+
+      if(_.has(this.survey, 'zones')) {
+        this.zones.reset(this.survey.zones.features);
+      }
+
+      // Show the form for the zones
       $('#map-zones').html(_.template($('#map-zones-view').html(), {
         zones: this.zones.toJSON()
       }));
-
-
     },
+
 
     /**
      * Get the user started drawing a shape on the map
@@ -185,10 +194,17 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
     },
 
     /**
-     * Save the shape that's just been drawn on the map
+     * Save the zones that are on the map
      */
-    doneDrawingZone: function(event) {
+    saveZones: function() {
+      // Update the zone names
+      $('#survey-zone-form input').each(function($input, index) {
+        this.zones[index].properties.name = $input.value;
+      });
+
       // Save the zone to the survey
+      console.log(this.survey);
+      this.survey.save();
     },
 
     /**
