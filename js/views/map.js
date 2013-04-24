@@ -63,46 +63,36 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
     events: {
       'click .draw': 'drawZone',
       'click .remove': 'removeZone',
-      'click .done': 'doneDrawingZone'
+      'click .save': 'saveZones'
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'render', 'renderZones', 'drawZone', 'removeZone',
-        'doneDrawingZone', 'save');
-
+      _.bindAll(this, 'render', 'renderZones', 'drawZone', 'removeZone', 'save');
 
       this.survey = options.survey;
       this.survey.on('change', this.render);
+      this.survey.on('change', this.renderZones);
 
       this.zones = new Zones.Collection();
-      this.zones.on('add', this.renderZones);
-      this.zones.on('reset', this.renderZones);
     },
 
 
     render: function() {
-      // Don't re-render
+      // Don't re-render the whole map if we don't need to.
       if(this.map) {
         return;
       }
 
       console.log("Rendering map draw view");
-      this.$el.html(_.template($('#map-draw-view').html(), {
-        zones: this.survey.get('zones')
-      }));
+      this.$el.html(_.template($('#map-draw-view').html()));
 
       // Initialize the map
       this.map = new L.map('map-draw', {
-        maxZoom: 19
+        maxZoom: 18
       });
 
-      // Center on the survey
+      // Add basic info, map base layer
       this.map.setView([42.374891,-83.069504], 17); // default center
-
-      // Set up the base map; add the parcels and done markers
-      // this.googleLayer = new L.Google("TERRAIN");
-      // this.map.addLayer(this.googleLayer);
-      //
       this.baseLayer = new L.tileLayer('http://a.tiles.mapbox.com/v3/matth.map-zmpggdzn/{z}/{x}/{y}.png');
       this.map.addLayer(this.baseLayer);
 
@@ -131,13 +121,12 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       });
       this.map.addControl(drawControl);
 
+      // When we create a shape...
       this.map.on('draw:created', function (e) {
-        var type  = e.layerType,
-            layer = e.layer;
-
-        console.log(e.layer);
+        var layer = e.layer;
 
         // Style zones with a unique color
+        // And add the layer to the map
         // TODO: we only have 6 colors right now.
         var zoneNumber = this.zones.length;
         var color = settings.colorRange[zoneNumber];
@@ -145,66 +134,86 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
           color: color,
           fillColor: color
         });
+        this.drawnItems.addLayer(layer);
 
         // Create a new zone model
         var zone = new Zones.Model({
-          layer: layer,
-          name: 'Zone ' + (this.zones.length + 1),
-          color: color
+          type: 'Feature',
+          geometry: layer.toGeoJSON(),
+          properties: {
+            name: 'Zone ' + (this.zones.length + 1),
+            color: color
+          }
         });
-        this.zones.push(zone);
+        this.zones.add(zone);
 
-        // Add the zone layer to the layerGroup
-        this.drawnItems.addLayer(layer);
+        // Add a form for the layer
+        $('#map-zones').html(_.template($('#map-zones-view').html(), {
+          zones: this.zones.toJSON()
+        }));
       }.bind(this));
 
-      if(this.survey.zones) {
-        this.renderZones();
-      }
     },
 
     /**
      * Render surveyor zones on the map
      */
     renderZones: function() {
-      console.log("ZONE ADDED!");
-      // Add the zones to the map
-      this.zones.each(function(zone) {
-        this.map.addLayer(zone);
-      });
-
-      if(_.has(this.survey, 'zones')) {
-        this.zones.reset(this.survey.zones.features);
+      if(!this.map || !this.survey.has('zones')) {
+        return;
       }
+
+      // Save the zones in the zone collection for easy access.
+      this.zones.reset(this.survey.get('zones').features);
+
+      console.log("Adding zones!");
+      var layer = {
+        type: 'FeatureCollection',
+        features: this.zones.toJSON()
+      };
+      console.log(layer);
+
+      var geoJSONLayer = L.geoJson(layer, {
+        style: function (feature) {
+          return {
+            color: feature.properties.color,
+            fillColor: feature.properties.color
+          };
+        }
+      });
+      geoJSONLayer.eachLayer(function(layer) {
+        this.drawnItems.addLayer(layer);
+      }.bind(this));
+
+      // this.drawnItems.addLayer(geoJSONLayer);
 
       // Show the form for the zones
       $('#map-zones').html(_.template($('#map-zones-view').html(), {
         zones: this.zones.toJSON()
       }));
-    },
 
-
-    /**
-     * Get the user started drawing a shape on the map
-     */
-    drawZone: function(event) {
-      // Show the drawing tools
-
-      // Show the save button
     },
 
     /**
      * Save the zones that are on the map
      */
     saveZones: function() {
-      // Update the zone names
-      $('#survey-zone-form input').each(function($input, index) {
-        this.zones[index].properties.name = $input.value;
-      });
+      var zones = {
+        type: 'FeatureCollection',
+        features: []
+      };
+
+      // Update all the survey zone names
+      $('#survey-zone-form input').each(function(index, $input) {
+        this.zones.at(index).attributes.properties.name = $input.value;
+      }.bind(this));
+      zones.features = this.zones.toJSON();
 
       // Save the zone to the survey
-      console.log(this.survey);
+      this.survey.attributes.zones = zones;
+      console.log(this.survey, zones);
       this.survey.save();
+      console.log(this.survey);
     },
 
     /**
