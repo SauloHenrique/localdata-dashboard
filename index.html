@@ -275,6 +275,7 @@
               <li class="active" id="tab-survey-home"><a href="#surveys/<%= survey.slug %>"><i class="icon-home" data-show="response-view-container"></i>Results</a></li>
               <li class="" id="tab-survey-export" data-show=""><a href="#surveys/<%= survey.slug %>/export" data-show="export-view-container"><i class="icon-download"></i>Export</a></li>
               <li class="" id="tab-survey-form"><a href="#surveys/<%= survey.slug %>/form" data-show="form-view-container"><i class="icon-list-ul"></i>Survey Questions</a></li>
+              <li class="" id="tab-survey-map"><a href="#surveys/<%= survey.slug %>/settings/map" data-show="form-view-container"><i class="icon-pencil"></i>Draw survey zones</a></li>
             </ul>
           </div>
         </div>
@@ -286,6 +287,7 @@
             <div id="form-view-container" class="tab"></div>
             <div id="export-view-container" class="tab"></div>
             <div id="settings-view-container" class="tab"></div>
+            <div id="map-draw-view-container" class="tab"></div>
           </div>
         </div>
       </div>
@@ -504,7 +506,7 @@
 
     <script type="text/template" id="map-draw-view">
       <h3>Draw your survey area</h3>
-      <div id="map-draw">Map here</div>
+      <div id="map-draw"></div>
       <div id="map-zones">ZONES HERE</div>
     </script>
 

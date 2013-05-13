@@ -171,7 +171,7 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       // Add the zones to the map
       this.zones.each(function(zone) {
         this.map.addLayer(zone);
-      });
+      }, this);
 
       if(_.has(this.survey, 'zones')) {
         this.zones.reset(this.survey.zones.features);
