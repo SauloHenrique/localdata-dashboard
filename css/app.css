@@ -340,6 +340,10 @@ header a {
   margin-bottom:20px;
 }
 
+#map-draw {
+  width:500px;
+}
+
 .map-controls {
   display:none;
   padding:5px;

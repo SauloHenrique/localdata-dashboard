@@ -96,16 +96,16 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
         maxZoom: 19
       });
 
-      // Center on the survey
-      this.map.setView([42.374891,-83.069504], 17); // default center
 
-      // Set up the base map; add the parcels and done markers
-      // this.googleLayer = new L.Google("TERRAIN");
-      // this.map.addLayer(this.googleLayer);
-      //
+      // Set up the base map
       this.baseLayer = new L.tileLayer('http://a.tiles.mapbox.com/v3/matth.map-zmpggdzn/{z}/{x}/{y}.png');
       this.map.addLayer(this.baseLayer);
 
+      // Center on the survey
+      // TODO: use geocoded center
+      this.map.setView([42.374891,-83.069504], 17);
+
+      return;
 
       // Initialize the FeatureGroup to store editable layers
       this.drawnItems = new L.FeatureGroup();
@@ -134,8 +134,6 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       this.map.on('draw:created', function (e) {
         var type  = e.layerType,
             layer = e.layer;
-
-        console.log(e.layer);
 
         // Style zones with a unique color
         // TODO: we only have 6 colors right now.
@@ -169,9 +167,9 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
     renderZones: function() {
       console.log("ZONE ADDED!");
       // Add the zones to the map
-      this.zones.each(function(zone) {
-        this.map.addLayer(zone);
-      }, this);
+      // this.zones.each(function(zone) {
+      //   this.map.addLayer(zone);
+      // }, this);
 
       if(_.has(this.survey, 'zones')) {
         this.zones.reset(this.survey.zones.features);
