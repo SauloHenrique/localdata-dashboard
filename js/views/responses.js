@@ -39,18 +39,21 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
     events: {
       "change #filter":  "filter",
       "click #subfilter a": "subFilter",
-      "click #reset": "reset"
+      "click #clear": "reset",
+      "click #refresh": "getNew"
     },
 
     initialize: function(options) {
-      _.bindAll(this, 'render', 'filter', 'subFilter', 'updateFilterView', 'updateFilterChoices');
+      _.bindAll(this, 'render', 'update', 'getNew', 'filter', 'subFilter', 'updateFilterView', 'updateFilterChoices', 'lastUpdated');
 
       this.template = _.template($('#response-view').html());
-      
+
       this.responses = options.responses;
       this.responses.on('reset', this.update, this);
       this.responses.on('add', this.update, this);
+      this.responses.on('addSet', this.updateFilterChoices, this);
       this.responses.on('addSet', this.update, this);
+      // this.responses.on('updated', this.lastUpdated, this);
 
       this.forms = options.forms;
       this.forms.on('reset', this.updateFilterChoices, this);
@@ -92,25 +95,13 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
         });
       }
 
-      // Set up the list view, now that the root exists.
-      if (this.listView === null) {
-        this.listView = new ResponseViews.ListView({
-          el: $('#responses-list'),
-          responses: this.responses,
-          parentView: this
-        });
-      }
-
       // Render the map
       this.mapView.render();
-
-      // Render the responses list
-      this.listView.render();
 
       this.updateFilterView();
     },
 
-    update: function () {
+    update: function (event) {
       if (this.firstRun) {
         this.render();
       }
@@ -124,24 +115,45 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
     },
 
     /**
+     * Get new responses
+     */
+    getNew: function(event) {
+      event.preventDefault();
+      this.responses.update();
+    },
+
+    /**
+     * Show the time of the last response collection update
+     */
+    lastUpdated: function () {
+      if(this.responses.lastUpdate !== undefined) {
+        var time = moment(this.responses.lastUpdate).format("Do h:mma");
+        $('#last-updated').html('Last updated: ' + time);
+      }
+    },
+
+    /**
      * Update the first-level choices for filtering responses
      */
     updateFilterChoices: function() {
       var flattenedForm = this.forms.getFlattenedForm();
-      $("#filter-view-container").html(_.template($('#filter-results').html(), { flattenedForm: flattenedForm }));
+      $("#filter-view-container").html(_.template($('#filter-results').html(), {
+        responses: this.responses,
+        flattenedForm: flattenedForm
+      }));
     },
+
 
     /**
      * If the data has already been filtered, show that on the page
      */
     updateFilterView: function () {
-      if (_.has(this.filters, "answerValue")) {
-        // Indicate the filter selection.
-        $("#current-filter").html("<h4>Current filter:</h4> <h3>" + this.filters.questionValue + ": " + this.filters.answerValue + "</h3>   <a id=\"reset\" class=\"button\">Clear filter</a>");
-        $('#subfilter').html('');
+      if (_.has(this.filter, 'answer')) {
+        return;
       } else {
+        console.log("Clear sub filter");
         // Clear the filter selections.
-        $("#current-filter").html("");
+        $('#subfilter').html('');
         $('#filter').val('');
       }
     },
@@ -150,12 +162,17 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
      * Reset any filters
      */
     reset: function(event) {
-      this.filters = {};
+      console.log("Clearing filter");
+      this.filter = {};
 
       this.responses.clearFilter();
       this.updateFilterView();
     },
 
+
+    /**
+     * Show possible answers to a given question
+     */
     filter: function(e) {
       _kmq.push(['record', "Question filter selected"]);
       var $question = $(e.target);
@@ -169,23 +186,43 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
       this.mapView.setFilter(question, answers);
     },
 
-    subFilter: function(e) {
-      _kmq.push(['record', "Answer filter selected"]);
-      var $answer = $(e.target);
 
-      // Notify the user we're working on it.
-      events.publish('loading', [true]);
+    /**
+     * Show only responses with a specific answer
+     */
+    subFilter: function(event) {
+      _kmq.push(['record', "Answer filter selected"]);
+      var $answer = $(event.target);
+
+      // Clear the current filter, if there is one.
+      if(_.has(this.filter, 'answer')) {
+        this.responses.clearFilter({ silent: true });
+      }
+
+      // Mark the answer as selected
+      $('#subfilter a').removeClass('selected');
+      $answer.addClass('selected');
+
+      // Notify the user we're working on it
+      // (it can take a while to filter a lot of items)
+      // events.publish('loading', [true]);
+      $('#loadingsmg').show();
+      console.log("Loading");
 
       // Filter the responses
-      this.filters.answerValue = $answer.text();
-      this.filters.questionValue = $("#filter").val();
+      this.filter.answer = $answer.text();
+      this.filter.question = $("#filter").val();
+      this.responses.setFilter(this.filter.question, this.filter.answer);
 
-      this.responses.setFilter(this.filters.questionValue, this.filters.answerValue);
-
+      // Note that we're done loading
       events.publish('loading', [false]);
+      $('#loadingsmg').hide();
+      console.log("Done loading");
+
 
       this.updateFilterView();
     },
+
 
     remove: function () {
       this.$el.remove();
@@ -207,7 +244,7 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
   ResponseViews.ListView = Backbone.View.extend({
     responses: null,
     parentView: null,
-    visibleItemCount: 20,
+    visibleItemCount: 1,
     page: -1,
     pageCount: null,
     nextButton: null,
@@ -222,9 +259,9 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
 
     initialize: function(options) {
       _.bindAll(this, 'updateResponses', 'render', 'goToPage', 'humanizeDates', 'setupPagination', 'pagePrev', 'pageNext');
-      this.template = _.template($('#responses-table').html());
+      this.template = _.template($('#response-list').html());
       this.paginationTemplate = _.template($('#t-responses-pagination').html());
-      
+
       this.responses = options.responses;
       this.listenTo(this.responses, 'reset', this.updateResponses);
       this.listenTo(this.responses, 'addSet', this.updateResponses);
@@ -262,7 +299,6 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
 
       // Render the responses table
       this.$el.html(this.template(context));
-
       // Render the pagination elements
       this.responsesPagination = this.$('#responses-pagination');
       this.responsesPagination.html(this.paginationTemplate({
@@ -297,7 +333,7 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
       if (this.page === -1) {
         this.page = 0;
       }
-      this.pageCount = Math.ceil(this.responses.length / this.visibleItemCount);  
+      this.pageCount = Math.ceil(this.responses.length / this.visibleItemCount);
     },
 
     goToPage: function(e) {
@@ -341,7 +377,7 @@ function($, _, Backbone, moment, events, _kmq, settings, api, Responses, MapView
         }
       });
     }
-  
+
   });
 
   return ResponseViews;

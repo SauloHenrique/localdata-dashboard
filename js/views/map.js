@@ -238,7 +238,8 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
     initialize: function(options) {
       console.log("Init map view");
-      _.bindAll(this, 'render', 'selectObject', 'renderObject', 'renderObjects', 'getResponsesInBounds', 'updateMapStyleBasedOnZoom', 'updateObjectStyles');
+      _.bindAll(this, 'render', 'selectObject', 'renderObject', 'renderObjects', 'getResponsesInBounds', 'updateMapStyleBasedOnZoom', 'updateObjectStyles',
+        'styleFeature', 'setupPolygon');
 
       this.responses = options.responses;
       // TODO: if we add the filter logic to the responses collection, we can
@@ -264,6 +265,8 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
     },
 
     fitBounds: function () {
+      this.map.invalidateSize(false);
+
       if (this.responses !== null && this.responses.length > 0) {
         try {
           this.map.fitBounds(this.objectsOnTheMap.getBounds());
@@ -295,15 +298,21 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
         this.$el.html(_.template($('#map-view').html(), {}));
 
         // Initialize the map
-        this.map = new L.map('map');
+        this.map = new L.map('map', {
+          zoom: 15
+        });
 
         // Set up the base map; add the parcels and done markers
-        this.googleLayer = new L.Google("TERRAIN");
-        this.map.addLayer(this.googleLayer);
+        this.baseLayer = L.tileLayer('http://a.tiles.mapbox.com/v3/matth.map-zmpggdzn/{z}/{x}/{y}.png');
+        this.map.addLayer(this.baseLayer);
+        this.satelliteLayer = L.tileLayer('http://a.tiles.mapbox.com/v3/matth.map-yyr7jb6r/{z}/{x}/{y}.png');
+        this.activeLayer = 'streets';
+
         this.map.addLayer(this.zoneLayer);
         this.map.addLayer(this.objectsOnTheMap);
 
-        this.map.setView([42.374891,-83.069504], 17); // default center
+        this.map.setView([0,0], 17); // default center
+        this.updateMapStyleBasedOnZoom();
         this.map.on('zoomend', this.updateMapStyleBasedOnZoom);
       }
 
@@ -330,17 +339,25 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       }
 
       if (_.isArray(arg)) {
-        // We got an array of models. Let's plot them.
+        // We got an array of models. Let's plot just that set them.
         this.plotResponses(arg);
       } else {
         // Plot all of the responses from the responses collection.
         this.plotResponses();
       }
+
+
       events.publish('loading', [false]);
       return this;
     },
 
-    // Set filter parameters for displaying results on the map
+
+    /**
+     * Set filter parameters for displaying results on the map
+     * The response collection will activate this if we have an active filter
+     * @param {String} question Name of the question, eg 'vacant'
+     * @param {Object} answers  Possible answers to the qu
+     */
     setFilter: function (question, answers) {
       this.filter = {
         question: question,
@@ -349,16 +366,94 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       this.plotResponses();
     },
 
-    // Incrementally plot a set of responses on the map.
-    // Optional parameters: "question", [answers]
-    // If given, each result on the map will be styled by answers to
-    // question.
-    plotResponses: function (responses) {
-      var indexOfColorToUse;
-      var color;
 
+    /**
+     * Style a feature
+     * @param  {Object} feature
+     * @return {Object}         feature with style attributes
+     */
+    styleFeature: function(data) {
+      // Set a default style
+      var style = this.defaultStyle;
+
+      // If there's no data, style this as blank
+      if(data === undefined || this.filter === null) {
+        return style;
+      }
+
+      // Set the default filter style
+      style = _.extend({
+        color: settings.colorRange[0],
+        fillColor: settings.colorRange[0]
+      }, settings.styleTemplate);
+
+      // Get the answer to the currently filtered question
+      var answer = data[this.filter.question];
+
+      // If there's no answer, style this as a blank answer
+      if (answer === undefined) {
+        return style;
+      }
+
+      // Set the line and fill colors, then return the style
+      style.color = this.filter.answers[answer].color;
+      style.fillColor = style.color;
+      return style;
+    },
+
+
+    /**
+     * Set up a geojson feature for a response object with a polygon
+     * @param  {Object} response a response object with a polygon
+     * @return {Object}          GeoJSON feature
+     */
+    setupPolygon: function(response) {
+      // Record the objects as rendered so we don't render it twice.
+      var parcelId = response.get('parcel_id');
+      this.parcelIdsOnTheMap[parcelId] = true;
+
+      // Set up the default style
+      var style = this.defaultStyle;
+
+      // Set up the feature
+      var feature = {
+        type: 'Feature',
+        id: response.get('id'),
+        parcelId: parcelId,
+        geometry: response.get('geo_info').geometry,
+        style: style
+      };
+
+      // If there is a filter, attach the filtered question to the feature
+      // This is used later to style the feature
+      // We don't attach all the data to keep size down
+      // (large collections can have 20+ mb of data)
+      if (this.filter !== null) {
+
+        // Some responses don't have associated data. It's still important that
+        // they appear in the filter, since the user may be looking for empty
+        // result sets.
+        if(response.get('responses') === undefined) {
+          feature[this.filter.question] = undefined;
+        }else {
+          feature[this.filter.question] = response.get('responses')[this.filter.question];
+        }
+      }
+
+      // Return the feature for rendering
+      return feature;
+    },
+
+
+    /**
+     * Plot responses on the map
+     * @param  {Array} responses
+     */
+    plotResponses: function (responses) {
+      // If we aren't given an explicit set of responses to plot,
+      // we'll plot all of the responses from the collection.
       if (responses === undefined) {
-        // Plot all of the responses from the collection.
+
         // Clear out the old results first
         this.objectsOnTheMap.clearLayers();
         this.parcelIdsOnTheMap = {};
@@ -368,11 +463,9 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       }
 
       var renderedParcelTracker = this.parcelIdsOnTheMap;
-      var filter = this.filter;
 
-      // Create GeoJSON FeatureCollection objects to pass to Leaflet for
-      // rendering.
-
+      // We'll need to create GeoJSON FeatureCollection objects to pass
+      // to Leaflet for rendering.
       var featureCollection = {
         type: 'FeatureCollection',
         features: []
@@ -384,44 +477,30 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       };
 
       // Populate the FeatureCollection for responses with full geometry.
-      featureCollection.features = _.map(_.filter(responses, function (response) {
-        // Get items with geometry that we haven't seen yet
-        return (_.has(response.get('geo_info'), 'geometry')
-                && !_.has(renderedParcelTracker, response.get('parcel_id')));
-      }), function (response) {
-        var parcelId = response.get('parcel_id');
-        renderedParcelTracker[parcelId] = true;
+      featureCollection.features = _.map(
+        _.filter(responses, function (response) {
 
-        var feature = {
-          type: 'Feature',
-          id: response.get('id'),
-          parcelId: parcelId,
-          geometry: response.get('geo_info').geometry
-        };
-
-        // Color the results if necessary
-        if (filter !== null) {
-          var questions = response.get('responses');
-          var answerToQuestion = questions[filter.question];
-
-          // Figure out what color to use
-          // TODO: memoize the index lookup?
-          feature.properties = {
-            color: indexToColor(_.indexOf(filter.answers, answerToQuestion))
-          };
-        }
-        return feature;
-      });
+          // Get items that have geometry
+          // AND aren't already on the map
+          return (_.has(response.get('geo_info'), 'geometry') &&
+                 !_.has(renderedParcelTracker, response.get('parcel_id'))
+          );
+      }), this.setupPolygon);
 
       // Populate the FeatureCollection for responses with only a centroid.
-      pointCollection.features = _.map(_.filter(responses, function (response) {
-        return (!_.has(response.get('geo_info'), 'geometry')
-                && _.has(response.get('geo_info'), 'centroid'));
+      pointCollection.features = _.map(
+        _.filter(responses, function (response) {
+
+        return (!_.has(response.get('geo_info'), 'geometry') &&
+                _.has(response.get('geo_info'), 'centroid'));
       }), function (response) {
+
+        // Record the objects as rendered so we don't render it twice.
         var id = response.get('id');
         renderedParcelTracker[id] = true;
 
-        return {
+        // Set up the feature
+        var feature = {
           type: 'Feature',
           id: id,
           geometry: {
@@ -429,19 +508,17 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
             coordinates: response.get('geo_info').centroid
           }
         };
+
+        return feature;
       });
 
       // If we found some full-geometry responses, set up the style and pass
       // them to Leaflet.
       if (featureCollection.features.length > 0) {
-        var style = this.defaultStyle;
-        if (filter !== null) {
-          style = getFeatureStyle;
-        }
-
+        // TODO: THE DATA IS GONE so the STYLE IS GONE.
         var featureLayer = new L.geoJson(featureCollection, {
           pointToLayer: this.defaultPointToLayer,
-          style: style
+          style: this.styleFeature
         });
         featureLayer.on('click', this.selectObject);
 
@@ -461,6 +538,7 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
         // Add the layer to the layergroup and the hashmap
         this.objectsOnTheMap.addLayer(pointLayer);
       }
+
 
       if (featureCollection.features.length > 0 || pointCollection.features.length > 0) {
         this.delayFitBounds();
@@ -482,11 +560,13 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
         // Fit the map to the zones, if appropriate.
         this.delayFitBounds();
+
+        // Make sure objects are on top
+        this.objectsOnTheMap.bringToFront();
       }
     },
 
     updateObjectStyles: function(style) {
-      console.log("Changing style");
       this.objectsOnTheMap.setStyle(style);
     },
 
@@ -530,8 +610,6 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
     },
 
     updateMapStyleBasedOnZoom: function(e) {
-      console.log("Map style update triggered");
-
       // Don't update the styles if there's a filter in place
       if (this.filter !== null) {
         return;
@@ -545,10 +623,11 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
         // If we're in pretty close, show the satellite view
         if(zoom > 14) {
-          if(this.googleLayer._type !== "HYBRID") {
-            this.map.removeLayer(this.googleLayer);
-            this.googleLayer = new L.Google("HYBRID");
-            this.map.addLayer(this.googleLayer);
+          if(this.activeLayer !== 'satellite') {
+            this.map.removeLayer(this.baseLayer);
+            this.map.addLayer(this.satelliteLayer, true);
+            this.satelliteLayer.bringToBack();
+            this.activeLayer = 'satellite';
           }
 
           if(this.defaultStyle !== settings.closeZoomStyle) {
@@ -565,21 +644,21 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
           }
 
           // And use the terrain map
-          if (this.googleLayer._type !== "TERRAIN") {
+          if (this.activeLayer !== 'streets') {
             // Show a more abstract map when zoomed out
-            this.map.removeLayer(this.googleLayer);
-            this.googleLayer = new L.Google("TERRAIN");
-            this.map.addLayer(this.googleLayer);
+            this.map.removeLayer(this.satelliteLayer);
+            this.map.addLayer(this.baseLayer, true);
+            this.activeLayer = 'streets';
           }
         }
 
       }else {
         // Far zoom (>14)
         // Show a more abstract map when zoomed out
-        if (this.googleLayer._type !== "TERRAIN") {
-          this.map.removeLayer(this.googleLayer);
-          this.googleLayer = new L.Google("TERRAIN");
-          this.map.addLayer(this.googleLayer);
+        if (this.activeLayer !== 'streets') {
+          this.map.removeLayer(this.satelliteLayer);
+          this.map.addLayer(this.baseLayer, true);
+          this.activeLayer = 'streets';
 
           this.defaultStyle = settings.farZoomStyle;
           this.updateObjectStyles(settings.farZoomStyle);
@@ -592,25 +671,9 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       }
     },
 
-    getParcelsInBounds: function() {
-      // Don't add any parcels if the zoom is really far out.
-      var zoom = this.map.getZoom();
-      if(zoom < 16) {
-        return;
-      }
-
-      // If there are a lot of objects, let's clear them out
-      // to improve performance
-      if( _.size(this.parcelIdsOnTheMap) > 1250 ) {
-        this.objectsOnTheMap.clearLayers();
-        this.parcelIdsOnTheMap = {};
-      }
-
-      // Get parcel data in the bounds
-      api.getObjectsInBounds(this.map.getBounds(), this.renderObjects);
-    },
-
-    // Get all the responses in the current viewport
+    /**
+     * Get all the responses in the current viewport
+     */
     getResponsesInBounds: function(){
       console.log("Getting responses in the map");
 
@@ -625,11 +688,17 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
       api.getResponsesInBounds(this.map.getBounds(), this.addResultsToMap);
     },
 
+    /**
+     * Highlight a selected object; un-hilight any previously selected object
+     * @param  {Object} event
+     */
     selectObject: function(event) {
       _kmq.push(['record', "Map object selected"]);
 
+      // Visually deselect the previous style
       if (this.selectedLayer !== null) {
-        this.selectedLayer.setStyle(this.defaultStyle);
+        var originalStyle = this.styleFeature(this.selectedLayer.feature);
+        this.selectedLayer.setStyle(originalStyle);
       }
 
       // Select the current layer
@@ -638,41 +707,39 @@ function($, _, Backbone, L, moment, events, _kmq, settings, api, Responses, Zone
 
       // Let's show some info about this object.
       this.details(this.selectedLayer.feature);
-
     },
 
+
     /**
-     * When a parcel is clicked, show details for just that parcel.
+     * Show details for a particular feature.
      *
      * @param  {Object} options An object with a parcelId or id property
      */
     details: function(feature) {
-      console.log(feature);
-
       // Find out if we're looking up a set of parcels, or one point
       if(feature.parcelId !== undefined && feature.parcelId !== '') {
-        console.log("Finding parcels ", feature.parcelId);
         this.sel = new Responses.Collection(this.responses.where({'parcel_id': feature.parcelId}));
       }else {
-        console.log("Finding point", feature.id);
         this.sel = new Responses.Collection(this.responses.where({'id': feature.id}));
       }
 
       // Only show the most recent result for that parcel / point
       // TODO
       // Show previous results for the clicked parcel if that happens
-      var selectedSingleObject = this.sel.toJSON()[0];
+      var selectedObjects = this.sel.toJSON();
 
       // Humanize the date
-      selectedSingleObject.createdHumanized = moment(selectedSingleObject.created, "YYYY-MM-DDThh:mm:ss.SSSZ").format("MMM Do h:mma");
+      _.map(selectedObjects, function(obj){
+        obj.createdHumanized = moment(obj.created, "YYYY-MM-DDThh:mm:ss.SSSZ").format("MMM Do h:mma");
+      });
 
       // Render the object
-      $("#individual-result-container").html(_.template($('#indivdual-result').html(), {r: selectedSingleObject}));
+      $("#result-container").html(_.template($('#selected-results').html(), {responses: selectedObjects}));
 
       // Button to close the details view
-      $("#individual-result-container .close").click(function(e) {
+      $("#result-container .close").click(function(e) {
         e.preventDefault();
-        $("#individual-result-container").html("");
+        $("#result-container").html("");
       });
     }
 
